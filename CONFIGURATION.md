@@ -73,26 +73,27 @@ A few special types are defined, the rest map to standard Go types
 |[plugin.choria.stats_port](#pluginchoriastats_port)|[plugin.choria.status_file_path](#pluginchoriastatus_file_path)|
 |[plugin.choria.status_update_interval](#pluginchoriastatus_update_interval)|[plugin.choria.submission.max_spool_size](#pluginchoriasubmissionmax_spool_size)|
 |[plugin.choria.submission.spool](#pluginchoriasubmissionspool)|[plugin.choria.use_srv](#pluginchoriause_srv)|
-|[plugin.nats.credentials](#pluginnatscredentials)|[plugin.nats.ngs](#pluginnatsngs)|
-|[plugin.nats.pass](#pluginnatspass)|[plugin.nats.user](#pluginnatsuser)|
-|[plugin.scout.agent_disabled](#pluginscoutagent_disabled)|[plugin.scout.overrides](#pluginscoutoverrides)|
-|[plugin.scout.tags](#pluginscouttags)|[plugin.security.always_overwrite_cache](#pluginsecurityalways_overwrite_cache)|
-|[plugin.security.certmanager.alt_names](#pluginsecuritycertmanageralt_names)|[plugin.security.certmanager.api_version](#pluginsecuritycertmanagerapi_version)|
-|[plugin.security.certmanager.issuer](#pluginsecuritycertmanagerissuer)|[plugin.security.certmanager.namespace](#pluginsecuritycertmanagernamespace)|
-|[plugin.security.certmanager.replace](#pluginsecuritycertmanagerreplace)|[plugin.security.cipher_suites](#pluginsecuritycipher_suites)|
-|[plugin.security.client_anon_tls](#pluginsecurityclient_anon_tls)|[plugin.security.ecc_curves](#pluginsecurityecc_curves)|
-|[plugin.security.file.ca](#pluginsecurityfileca)|[plugin.security.file.cache](#pluginsecurityfilecache)|
-|[plugin.security.file.certificate](#pluginsecurityfilecertificate)|[plugin.security.file.key](#pluginsecurityfilekey)|
-|[plugin.security.pkcs11.driver_file](#pluginsecuritypkcs11driver_file)|[plugin.security.pkcs11.slot](#pluginsecuritypkcs11slot)|
-|[plugin.security.provider](#pluginsecurityprovider)|[plugin.security.support_legacy_certificates](#pluginsecuritysupport_legacy_certificates)|
-|[plugin.yaml](#pluginyaml)|[publish_timeout](#publish_timeout)|
-|[registerinterval](#registerinterval)|[registration](#registration)|
-|[registration_collective](#registration_collective)|[registration_splay](#registration_splay)|
-|[rpcaudit](#rpcaudit)|[rpcauditprovider](#rpcauditprovider)|
-|[rpcauthorization](#rpcauthorization)|[rpcauthprovider](#rpcauthprovider)|
-|[rpclimitmethod](#rpclimitmethod)|[securityprovider](#securityprovider)|
-|[soft_shutdown](#soft_shutdown)|[soft_shutdown_timeout](#soft_shutdown_timeout)|
-|[threaded](#threaded)|[ttl](#ttl)|
+|[plugin.login.aaasvc.login.url](#pluginloginaaasvcloginurl)|[plugin.nats.credentials](#pluginnatscredentials)|
+|[plugin.nats.ngs](#pluginnatsngs)|[plugin.nats.pass](#pluginnatspass)|
+|[plugin.nats.user](#pluginnatsuser)|[plugin.scout.agent_disabled](#pluginscoutagent_disabled)|
+|[plugin.scout.overrides](#pluginscoutoverrides)|[plugin.scout.tags](#pluginscouttags)|
+|[plugin.security.always_overwrite_cache](#pluginsecurityalways_overwrite_cache)|[plugin.security.certmanager.alt_names](#pluginsecuritycertmanageralt_names)|
+|[plugin.security.certmanager.api_version](#pluginsecuritycertmanagerapi_version)|[plugin.security.certmanager.issuer](#pluginsecuritycertmanagerissuer)|
+|[plugin.security.certmanager.namespace](#pluginsecuritycertmanagernamespace)|[plugin.security.certmanager.replace](#pluginsecuritycertmanagerreplace)|
+|[plugin.security.cipher_suites](#pluginsecuritycipher_suites)|[plugin.security.client_anon_tls](#pluginsecurityclient_anon_tls)|
+|[plugin.security.ecc_curves](#pluginsecurityecc_curves)|[plugin.security.file.ca](#pluginsecurityfileca)|
+|[plugin.security.file.cache](#pluginsecurityfilecache)|[plugin.security.file.certificate](#pluginsecurityfilecertificate)|
+|[plugin.security.file.key](#pluginsecurityfilekey)|[plugin.security.pkcs11.driver_file](#pluginsecuritypkcs11driver_file)|
+|[plugin.security.pkcs11.slot](#pluginsecuritypkcs11slot)|[plugin.security.provider](#pluginsecurityprovider)|
+|[plugin.security.support_legacy_certificates](#pluginsecuritysupport_legacy_certificates)|[plugin.yaml](#pluginyaml)|
+|[publish_timeout](#publish_timeout)|[registerinterval](#registerinterval)|
+|[registration](#registration)|[registration_collective](#registration_collective)|
+|[registration_splay](#registration_splay)|[rpcaudit](#rpcaudit)|
+|[rpcauditprovider](#rpcauditprovider)|[rpcauthorization](#rpcauthorization)|
+|[rpcauthprovider](#rpcauthprovider)|[rpclimitmethod](#rpclimitmethod)|
+|[securityprovider](#securityprovider)|[soft_shutdown](#soft_shutdown)|
+|[soft_shutdown_timeout](#soft_shutdown_timeout)|[threaded](#threaded)|
+|[ttl](#ttl)|[](#)|
 
 
 ## activate_agents
@@ -827,6 +828,13 @@ Path to a directory holding messages to submit to the middleware
  * **Default Value:** true
 
 If SRV record lookups should be attempted to find Puppet, PuppetDB, Brokers etc
+
+## plugin.login.aaasvc.login.url
+
+ * **Type:** strings
+ * **Additional Information:** https://github.com/choria-io/aaasvc
+
+List of URLs to attempt to login against when the remote signer is enabled
 
 ## plugin.nats.credentials
 

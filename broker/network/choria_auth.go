@@ -5,8 +5,10 @@
 package network
 
 import (
+	"crypto/ed25519"
 	"crypto/md5"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"strings"
@@ -125,12 +127,36 @@ func (a *ChoriaAuth) Check(c server.ClientAuthentication) bool {
 	return verified
 }
 
+func (a *ChoriaAuth) verifyNonceSignature(nonce []byte, sig string, pks string) (bool, error) {
+	switch {
+	case sig == "":
+		return false, fmt.Errorf("connection nonce was not signed")
+	case pks == "":
+		return false, fmt.Errorf("no public key found in the JWT to verify nonce signature")
+	case len(nonce) == 0:
+		return false, fmt.Errorf("server did not generate a nonce to verify")
+	default:
+		pubK, err := hex.DecodeString(pks)
+		if err != nil {
+			return false, fmt.Errorf("invalid nonce signature")
+		}
+
+		if !ed25519.Verify(pubK, nonce, []byte(sig)) {
+			return false, fmt.Errorf("nonce signature did not verify using pub key in the jwt")
+		}
+	}
+
+	return true, nil
+}
+
 func (a *ChoriaAuth) handleDefaultConnection(c server.ClientAuthentication, conn *tls.ConnectionState, tlsVerified bool) (bool, error) {
 	user := a.createUser(c)
 	remote := c.RemoteAddress()
 	opts := c.GetOpts()
+	nonce := c.GetNonce()
 	jwts := opts.Token
 	caller := ""
+
 	var err error
 
 	log := a.log.WithField("mTLS", tlsVerified)
@@ -148,19 +174,34 @@ func (a *ChoriaAuth) handleDefaultConnection(c server.ClientAuthentication, conn
 
 	// we only do JWT based auth in TLS mode
 	if (a.anonTLS || jwts != "") && conn != nil {
+		log.Debugf("Performing JWT based authentication verification")
 		if remote == nil {
 			return false, fmt.Errorf("remote client information is required in anonymous TLS or JWT signing modes")
 		}
 
-		caller, perms, err = a.parseClientIDJWT(jwts)
+		var pks string
+
+		caller, pks, perms, err = a.parseClientIDJWT(jwts)
 		if err != nil {
-			return false, fmt.Errorf("could not parse JWT from %s: %s", remote.String(), err)
+			log.Errorf("could not parse JWT from %s: %s", remote.String(), err)
+			return false, fmt.Errorf("invalid JWT token")
 		}
+
 		user.Username = caller
 
-		log = log.WithField("jwt_client", true)
-
+		log = log.WithFields(logrus.Fields{"jwt_client": true, "caller": caller})
 		log.Debugf("Extracted caller id %s from JWT token", caller)
+
+		nonceOK, err := a.verifyNonceSignature(nonce, opts.Sig, pks)
+		if err != nil {
+			log.Errorf("nonce signature verification failed: %s", err)
+			return false, fmt.Errorf("invalid nonce signature")
+		}
+		if !nonceOK {
+			return false, fmt.Errorf("invalid nonce signature")
+		}
+
+		log.Debugf("Succesfully verified nonce signature")
 	}
 
 	switch {
@@ -317,13 +358,13 @@ func (a *ChoriaAuth) handleUnverifiedProvisioningConnection(c server.ClientAuthe
 	return true, nil
 }
 
-func (a *ChoriaAuth) parseClientIDJWT(jwts string) (string, *tokens.ClientPermissions, error) {
+func (a *ChoriaAuth) parseClientIDJWT(jwts string) (caller string, pubK string, perms *tokens.ClientPermissions, err error) {
 	if a.jwtSigner == emptyString {
-		return "", nil, fmt.Errorf("JWT Signer not set in plugin.choria.network.client_signer_cert, denying all clients")
+		return "", "", nil, fmt.Errorf("JWT Signer not set in plugin.choria.network.client_signer_cert, denying all clients")
 	}
 
 	if jwts == emptyString {
-		return "", nil, fmt.Errorf("no JWT received")
+		return "", "", nil, fmt.Errorf("no JWT received")
 	}
 
 	// Generally now we want to accept all mix mode clients who have a valid JWT, ie. one with the
@@ -332,14 +373,14 @@ func (a *ChoriaAuth) parseClientIDJWT(jwts string) (string, *tokens.ClientPermis
 	// the specific scenario where AnonTLS is configured without checking the purpose field
 	claims, err := tokens.ParseClientIDTokenWithKeyfile(jwts, a.jwtSigner, !a.anonTLS)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	if claims.CallerID == emptyString {
-		return "", nil, fmt.Errorf("no callerid in claims")
+		return "", "", nil, fmt.Errorf("no callerid in claims")
 	}
 
-	return claims.CallerID, claims.Permissions, nil
+	return claims.CallerID, claims.PublicKey, claims.Permissions, nil
 }
 
 func (a *ChoriaAuth) setMinimalClientPermissions(_ *server.User, caller string, subs []string, pubs []string) ([]string, []string) {
@@ -426,7 +467,7 @@ func (a *ChoriaAuth) setElectionPermissions(user *server.User, subs []string, pu
 
 func (a *ChoriaAuth) setPermissions(user *server.User, caller string, perms *tokens.ClientPermissions, log *logrus.Entry) (pubs []string, subs []string, err error) {
 	if perms != nil && perms.OrgAdmin {
-		log.Warnf("Granting user access to all subjects (OrgAdmin)")
+		log.Infof("Granting user access to all subjects (OrgAdmin)")
 		return allSubjects, allSubjects, nil
 	}
 

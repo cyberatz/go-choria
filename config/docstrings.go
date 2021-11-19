@@ -112,6 +112,7 @@ var docStrings = map[string]string{
 	"plugin.choria.security.request_signing_certificate":       "Path to the public certificate of the key used to sign the JWTs in the Signing Service",
 	"plugin.choria.security.request_signer.url":                "URL to the Signing Service",
 	"plugin.choria.security.request_signer.service":            "Enables signing requests via Choria RPC requests",
+	"plugin.login.aaasvc.login.url":                            "List of URLs to attempt to login against when the remote signer is enabled",
 	"plugin.security.client_anon_tls":                          "Use anonymous TLS to the Choria brokers from a client, also disables security provider verification - only when a remote signer is set",
 	"plugin.security.file.certificate":                         "When using file security provider, the path to the public certificate",
 	"plugin.security.file.key":                                 "When using file security provider, the path to the private key",
